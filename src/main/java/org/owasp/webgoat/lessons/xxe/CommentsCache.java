@@ -97,20 +97,10 @@ public class CommentsCache {
     var jc = JAXBContext.newInstance(Comment.class);
     var xif = XMLInputFactory.newInstance();
 
-    protected Comment parseXml(String xml) throws JAXBException, XMLStreamException {
-    var jc = JAXBContext.newInstance(Comment.class);
-    var xif = XMLInputFactory.newInstance();
-
-    // Desactivar el acceso a entidades externas
-    xif.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-    xif.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-
-    var xsr = xif.createXMLStreamReader(new StringReader(xml));
-
-    var unmarshaller = jc.createUnmarshaller();
-    return (Comment) unmarshaller.unmarshal(xsr);
-}
-
+    if (webSession.isSecurityEnabled()) {
+      xif.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, ""); // Compliant
+      xif.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); // compliant
+    }
 
     var xsr = xif.createXMLStreamReader(new StringReader(xml));
 
