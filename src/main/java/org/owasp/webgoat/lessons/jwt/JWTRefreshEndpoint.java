@@ -96,7 +96,44 @@ public class JWTRefreshEndpoint extends AssignmentEndpoint {
     return tokenJson;
   }
 
-  @PostMapping("/JWT/refresh/checkout")
+@PostMapping("/JWT/refresh/checkout")
+@ResponseBody
+public ResponseEntity<AttackResult> checkout(
+    @RequestHeader(value = "Authorization", required = false) String token) {
+    if (token == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    try {
+        Jwt<Header, Claims> jwt = Jwts.parser().setSigningKey(JWT_PASSWORD).parse(token.replace("Bearer ", ""));
+        Claims claims = jwt.getBody();
+        String user = (String) claims.get("user");
+        
+        // Verificar la firma del token
+        if (jwt.verifySignature()) {
+            // Token verificado correctamente, continuar con la lógica de negocio
+            if ("Tom".equals(user)) {
+                if ("none".equals(jwt.getHeader().get("alg"))) {
+                    return ok(success(this).feedback("jwt-refresh-alg-none").build());
+                }
+                return ok(success(this).build());
+            }
+            return ok(failed(this).feedback("jwt-refresh-not-tom").feedbackArgs(user).build());
+        } else {
+            // La firma del token no es válida, responder con error de autenticación
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    } catch (ExpiredJwtException e) {
+        // Manejar token expirado
+        return ok(failed(this).output(e.getMessage()).build());
+    } catch (JwtException e) {
+        // Manejar error de verificación de firma
+        return ok(failed(this).feedback("jwt-invalid-token").build());
+    }
+}
+
+
+  /*@PostMapping("/JWT/refresh/checkout")
   @ResponseBody
   public ResponseEntity<AttackResult> checkout(
       @RequestHeader(value = "Authorization", required = false) String token) {
@@ -120,6 +157,7 @@ public class JWTRefreshEndpoint extends AssignmentEndpoint {
       return ok(failed(this).feedback("jwt-invalid-token").build());
     }
   }
+*/
 
   @PostMapping("/JWT/refresh/newToken")
   @ResponseBody
