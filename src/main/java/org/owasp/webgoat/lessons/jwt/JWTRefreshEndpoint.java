@@ -109,9 +109,9 @@ public ResponseEntity<AttackResult> checkout(
         Claims claims = jwt.getBody();
         String user = (String) claims.get("user");
         
-        // Verificar la firma del token
-        if (jwt.verifySignature()) {
-            // Token verificado correctamente, continuar con la lógica de negocio
+        // Verificar si el token está firmado
+        if (Jwts.parser().isSigned(token)) {
+            // Token firmado correctamente, continuar con la lógica de negocio
             if ("Tom".equals(user)) {
                 if ("none".equals(jwt.getHeader().get("alg"))) {
                     return ok(success(this).feedback("jwt-refresh-alg-none").build());
@@ -120,17 +120,18 @@ public ResponseEntity<AttackResult> checkout(
             }
             return ok(failed(this).feedback("jwt-refresh-not-tom").feedbackArgs(user).build());
         } else {
-            // La firma del token no es válida, responder con error de autenticación
+            // El token no está firmado, responder con error de autenticación
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     } catch (ExpiredJwtException e) {
         // Manejar token expirado
         return ok(failed(this).output(e.getMessage()).build());
     } catch (JwtException e) {
-        // Manejar error de verificación de firma
+        // Manejar otros errores de JWT
         return ok(failed(this).feedback("jwt-invalid-token").build());
     }
 }
+
 
 
   /*@PostMapping("/JWT/refresh/checkout")
